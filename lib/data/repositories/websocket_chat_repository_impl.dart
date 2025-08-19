@@ -186,7 +186,7 @@ class WebSocketChatRepositoryImpl implements WebSocketChatRepository {
         },
         sellerName: 'Carlos',
         //sellerName: 'Elisa',
-        //sellerName: 'James',
+        //sellerName: 'Pedro',
         companyDescription: '''
           Distribuidora Chaban Hnos es una empresa que realiza 
           la venta y logistica de distribucion para Coca Cola, 
