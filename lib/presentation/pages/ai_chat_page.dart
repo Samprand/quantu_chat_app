@@ -17,7 +17,7 @@ class AIChatPage extends StatefulWidget {
 
 class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   late AIChatController _aiChatController;
-  bool _isDarkMode = false;
+  late TextEditingController _textController;
   late AnimationController _fabAnimationController;
   late Animation<double> _fabAnimation;
   late AnimationController _connectionAnimationController;
@@ -42,6 +42,9 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
     print('🔧 AI Chat Page: Getting AIChatController from DI...');
     _aiChatController = di.sl<AIChatController>(param1: _currentUser.id);
     print('✅ AI Chat Page: AIChatController created for user: ${_currentUser.id}');
+    
+    // Initialize text controller
+    _textController = TextEditingController();
     
     // Setup animations
     _fabAnimationController = AnimationController(
@@ -106,6 +109,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   void dispose() {
     _fabAnimationController.dispose();
     _connectionAnimationController.dispose();
+    _textController.dispose();
     _aiChatController.dispose();
     super.dispose();
   }
@@ -113,7 +117,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _isDarkMode ? CustomChatTheme.darkBgMain : CustomChatTheme.bgMain,
+      backgroundColor: const Color(0xFF1A1D22),
       body: Column(
         children: [
           _buildCustomAppBar(),
@@ -124,17 +128,42 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
               initialData: _aiChatController.messages,
               builder: (context, snapshot) {
                 final messages = snapshot.data ?? [];
-                return Chat(
-                  messages: messages,
-                  onSendPressed: _handleSendPressed,
-                  user: _currentUser,
-                  theme: _isDarkMode 
-                      ? CustomChatTheme.getDarkTheme()
-                      : CustomChatTheme.getLightTheme(),
-                  showUserAvatars: true,
-                  showUserNames: false,
-                  onMessageTap: _handleMessageTap,
-                  onMessageLongPress: _handleMessageLongPress,
+                return Column(
+                  children: [
+                    // Custom message list without input
+                    Expanded(
+                      child: Container(
+                        color: const Color(0xFF1A1D22), // Same as input and app bar background
+                        child: messages.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'No messages here yet',
+                                  style: TextStyle(
+                                    color: Color(0xFF8A8A8A),
+                                    fontSize: 16,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
+                                reverse: true,
+                                padding: const EdgeInsets.all(16),
+                                itemCount: messages.length,
+                                itemBuilder: (context, index) {
+                                  final message = messages[index];
+                                  final isUser = message.author.id == _currentUser.id;
+                                  
+                                  if (message is types.TextMessage) {
+                                    return _buildMessageBubble(message, isUser);
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              ),
+                      ),
+                    ),
+                    // Our custom input widget
+                    _buildCustomInput(),
+                  ],
                 );
               },
             ),
@@ -153,117 +182,131 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
 
   Widget _buildCustomAppBar() {
     return Container(
+      width: double.infinity,
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 8,
-        left: 16,
-        right: 16,
-        bottom: 8,
+        top: MediaQuery.of(context).padding.top,
+        left: 0,
+        right: 0,
+        bottom: 0,
       ),
-      decoration: BoxDecoration(
-        color: _isDarkMode ? CustomChatTheme.darkBgWidget : CustomChatTheme.bgWidget,
+      decoration: const BoxDecoration(
+        color: Color(0xFF1A1D22), // Same as input background
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
         border: Border(
           bottom: BorderSide(
-            color: _isDarkMode ? CustomChatTheme.darkBorderBase : CustomChatTheme.borderBase,
+            color: Color(0xFF292D30), // Thin border to separate from body
             width: 1,
           ),
         ),
       ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: CustomChatTheme.primaryColor,
-            child: const Icon(Icons.smart_toy, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            // Back button
+            IconButton(
+              icon: const Icon(
+                Icons.chevron_left,
+                color: Colors.white,
+                size: 28,
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            const SizedBox(width: 8),
+            // Profile picture with online status
+            Stack(
               children: [
-                Text(
-                  'Quantu AI Assistant',
-                  style: TextStyle(
-                    color: _isDarkMode ? CustomChatTheme.darkTextDefault : CustomChatTheme.textDefault,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFFF6B35), // Orange background
+                  ),
+                  child: const CircleAvatar(
+                    radius: 20,
+                    backgroundImage: NetworkImage(
+                      'https://i.pinimg.com/474x/7d/4a/cc/7d4accbe1801b59f281602c475fd2c15.jpg',
+                    ),
                   ),
                 ),
-                AnimatedBuilder(
-                  animation: _connectionColorAnimation,
-                  builder: (context, child) {
-                    return Text(
-                      _getConnectionStatusText(),
-                      style: TextStyle(
-                        color: _connectionColorAnimation.value,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    );
-                  },
+                // Online status indicator
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.phone_outlined,
-              color: _isDarkMode ? CustomChatTheme.darkPlaceholder : CustomChatTheme.textSecondary,
-            ),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Voice call feature coming soon! 📞'),
-                  backgroundColor: CustomChatTheme.secondaryColor,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-              );
-            },
-          ),
-          PopupMenuButton<String>(
-            icon: Icon(
-              Icons.more_vert,
-              color: _isDarkMode ? CustomChatTheme.darkTextDefault : CustomChatTheme.textDefault,
-            ),
-            onSelected: _handleMenuAction,
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'theme',
-                child: Row(
-                  children: [
-                    Icon(
-                      _isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                      size: 20,
-                      color: _isDarkMode ? CustomChatTheme.darkTextDefault : CustomChatTheme.textDefault,
+            const SizedBox(width: 12),
+            // Text content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Quantu AI',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
                     ),
-                    const SizedBox(width: 12),
-                    Text(_isDarkMode ? 'Light Mode' : 'Dark Mode'),
-                  ],
-                ),
+                  ),
+                  const Text(
+                    'Seen 1 hour ago',
+                    style: TextStyle(
+                      color: Color(0xFFB0B0B0), // Light gray
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
               ),
-              const PopupMenuItem(
-                value: 'reconnect',
-                child: Row(
-                  children: [
-                    Icon(Icons.refresh, size: 20),
-                    SizedBox(width: 12),
-                    Text('Reconnect AI'),
-                  ],
-                ),
+            ),
+            // Menu button
+            PopupMenuButton<String>(
+              icon: const Icon(
+                Icons.more_vert,
+                color: Colors.white,
               ),
-              const PopupMenuItem(
-                value: 'clear',
-                child: Row(
-                  children: [
-                    Icon(Icons.clear_all, size: 20),
-                    SizedBox(width: 12),
-                    Text('Clear Chat'),
-                  ],
+              onSelected: _handleMenuAction,
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'reconnect',
+                  child: Row(
+                    children: [
+                      Icon(Icons.refresh, size: 20),
+                      SizedBox(width: 12),
+                      Text('Reconnect AI'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+                const PopupMenuItem(
+                  value: 'clear',
+                  child: Row(
+                    children: [
+                      Icon(Icons.clear_all, size: 20),
+                      SizedBox(width: 12),
+                      Text('Clear Chat'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -290,7 +333,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              _getConnectionStatusMessage(),
+              _getConnectionStatusText(),
               style: TextStyle(
                 color: _getConnectionStatusColor(),
                 fontSize: 14,
@@ -378,7 +421,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
     
     showModalBottomSheet(
       context: context,
-      backgroundColor: _isDarkMode ? CustomChatTheme.darkBgWidget : CustomChatTheme.bgWidget,
+      backgroundColor: CustomChatTheme.darkBgWidget,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -391,7 +434,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: _isDarkMode ? CustomChatTheme.darkBorderBase : CustomChatTheme.borderBase,
+                color: CustomChatTheme.darkBorderBase,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -420,16 +463,16 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
     return ListTile(
       leading: Icon(
         icon,
-        color: isDestructive 
-            ? CustomChatTheme.tertiaryColor 
-            : (_isDarkMode ? CustomChatTheme.darkTextDefault : CustomChatTheme.textDefault),
+                    color: isDestructive 
+                ? CustomChatTheme.tertiaryColor 
+                : CustomChatTheme.darkTextDefault,
       ),
       title: Text(
         title,
         style: TextStyle(
           color: isDestructive 
               ? CustomChatTheme.tertiaryColor 
-              : (_isDarkMode ? CustomChatTheme.darkTextDefault : CustomChatTheme.textDefault),
+              : CustomChatTheme.darkTextDefault,
         ),
       ),
       onTap: () {
@@ -441,12 +484,6 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
 
   void _handleMenuAction(String action) {
     switch (action) {
-      case 'theme':
-        setState(() {
-          _isDarkMode = !_isDarkMode;
-        });
-        HapticFeedback.lightImpact();
-        break;
       case 'reconnect':
         _reconnectToAI();
         break;
@@ -465,18 +502,18 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: _isDarkMode ? CustomChatTheme.darkBgWidget : CustomChatTheme.bgWidget,
+        backgroundColor: CustomChatTheme.darkBgWidget,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Clear Chat',
           style: TextStyle(
-            color: _isDarkMode ? CustomChatTheme.darkTextDefault : CustomChatTheme.textDefault,
+            color: CustomChatTheme.darkTextDefault,
           ),
         ),
         content: Text(
           'Are you sure you want to clear all messages? This action cannot be undone.',
           style: TextStyle(
-            color: _isDarkMode ? CustomChatTheme.darkTextDefault : CustomChatTheme.textDefault,
+            color: CustomChatTheme.darkTextDefault,
           ),
         ),
         actions: [
@@ -505,5 +542,209 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
 
   void _scrollToBottom() {
     _fabAnimationController.reverse();
+  }
+
+  Widget _buildCustomInput() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        color: Color(0xFF1A1D22),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x14FFFFFF),
+            blurRadius: 0,
+            offset: Offset(0, -1),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Input field with logo icon
+          Expanded(
+            child: Container(
+              height: 40,
+              decoration: ShapeDecoration(
+                color: const Color(0xFF22252A),
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(
+                    width: 1,
+                    color: Color(0xFF292D30),
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Logo icon
+                  Container(
+                    margin: const EdgeInsets.all(3),
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(17),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x8EFB4601),
+                          blurRadius: 15.30,
+                          offset: Offset(0, 4),
+                          spreadRadius: -10,
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(17),
+                      child: Image.asset(
+                        'assets/images/logo-icon.png',
+                        width: 34,
+                        height: 34,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  // Text input
+                  Expanded(
+                    child: TextField(
+                      controller: _textController,
+                      decoration: const InputDecoration(
+                        hintText: 'Ask Anything',
+                        hintStyle: TextStyle(
+                          color: Color(0x80AFAFAF), // 50% opacity
+                          fontSize: 16,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      ),
+                      style: const TextStyle(
+                        color: Color(0xFFAFAFAF),
+                        fontSize: 16,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w400,
+                      ),
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: _handleSendMessage,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Send button
+          Container(
+            width: 40,
+            height: 40,
+            decoration: ShapeDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment(0.50, 0.00),
+                end: Alignment(1.28, 1.00),
+                colors: [Color(0xFFFB4601), Color(0xFFFF8C1F)],
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              shadows: const [
+                BoxShadow(
+                  color: Color(0x11000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 4),
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => _handleSendMessage(_textController.text),
+                child: Center(
+                  child: const Icon(
+                    Icons.send,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageBubble(types.TextMessage message, bool isUser) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!isUser) ...[
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: CustomChatTheme.primaryColor,
+              child: const Text(
+                'AI',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isUser 
+                    ? const Color(0xFF101418) // Dark gray for user messages
+                    : const Color(0xFFFB4601).withOpacity(0.85), // Orange with 85% opacity for AI messages
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                message.text,
+                style: const TextStyle(
+                  color: Colors.white, // White text for both
+                  fontSize: 14, // 14px as specified
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400, // Regular weight
+                  height: null, // Auto line height
+                  letterSpacing: 0, // 0% letter spacing
+                ),
+              ),
+            ),
+          ),
+          if (isUser) ...[
+            const SizedBox(width: 8),
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: const Color(0xFF22252A),
+              child: const Text(
+                'U',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _handleSendMessage(String text) {
+    if (text.trim().isNotEmpty) {
+      _aiChatController.sendMessage(text.trim());
+      _textController.clear();
+    }
   }
 } 
