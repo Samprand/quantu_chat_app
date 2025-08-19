@@ -184,14 +184,17 @@ class WebSocketChatRepositoryImpl implements WebSocketChatRepository {
           'userId': userId,
           'timestamp': DateTime.now().toIso8601String(),
         },
-        sellerName: 'Sarah Johnson',  // Example seller name
+        sellerName: 'Carlos',
+        //sellerName: 'Elisa',
+        //sellerName: 'James',
         companyDescription: '''
-          TechVision Solutions is a cutting-edge technology consulting firm 
-          specializing in digital transformation, AI implementation, and 
-          enterprise software solutions. We help businesses leverage modern 
-          technology to drive growth and efficiency.
+          Distribuidora Chaban Hnos es una empresa que realiza 
+          la venta y logistica de distribucion para Coca Cola, 
+          Unilever, Fernet Branca entre otros.
         '''.trim(),
-        focusArea: 'Enterprise Digital Transformation and AI Solutions',
+        focusArea: 'Generar un mejor mix de productos en las ventas a clientes recomendando surtidos Unilever estratégicos y equilibrados.',
+        //focusArea: 'Abordar los problemas de precios de los productos clave "calientes" que son fundamentales para las principales ofertas promocionales de cada cliente.',
+        //focusArea: 'Mejorar la rotación del portafolio y aumentar la visibilidad del producto en el punto de venta, con foco en SKUs prioritarios y presentaciones de nuevos productos.',
       );
       
       if (_webSocketClient.isConnected) {

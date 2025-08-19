@@ -137,7 +137,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
                         child: messages.isEmpty
                             ? const Center(
                                 child: Text(
-                                  'No messages here yet',
+                                  'No hay mensajes aquí todavía',
                                   style: TextStyle(
                                     color: Color(0xFF8A8A8A),
                                     fontSize: 16,
@@ -224,16 +224,15 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
                   height: 40,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0xFFFF6B35), // Orange background
+                    color: Colors.black, 
                   ),
-                  child: const CircleAvatar(
-                    radius: 20,
-                    backgroundImage: NetworkImage(
-                      'https://i.pinimg.com/474x/7d/4a/cc/7d4accbe1801b59f281602c475fd2c15.jpg',
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/logo-icon-2.png',
+                      fit: BoxFit.cover,
                     ),
                   ),
-                ),
-                // Online status indicator
+                ),                // Online status indicator
                 Positioned(
                   bottom: 0,
                   right: 0,
@@ -264,7 +263,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
                     ),
                   ),
                   const Text(
-                    'Seen 1 hour ago',
+                    'En linea',
                     style: TextStyle(
                       color: Color(0xFFB0B0B0), // Light gray
                       fontSize: 14,
@@ -289,7 +288,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
                     children: [
                       Icon(Icons.refresh, size: 20),
                       SizedBox(width: 12),
-                      Text('Reconnect AI'),
+                      Text('Reconectar AI'),
                     ],
                   ),
                 ),
@@ -299,7 +298,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
                     children: [
                       Icon(Icons.clear_all, size: 20),
                       SizedBox(width: 12),
-                      Text('Clear Chat'),
+                      Text('Limpiar Chat'),
                     ],
                   ),
                 ),
@@ -360,15 +359,15 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
   String _getConnectionStatusText() {
     switch (_connectionStatus) {
       case ConnectionStatus.connected:
-        return 'Connected • Online';
+        return 'Conectado • En Linea';
       case ConnectionStatus.connecting:
-        return 'Connecting...';
+        return 'Conectando...';
       case ConnectionStatus.reconnecting:
-        return 'Reconnecting...';
+        return 'Reconectando...';
       case ConnectionStatus.disconnected:
-        return 'Disconnected';
+        return 'Desconectado';
       case ConnectionStatus.error:
-        return 'Connection Error';
+        return 'Error de conexión';
     }
   }
 
@@ -608,7 +607,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
                     child: TextField(
                       controller: _textController,
                       decoration: const InputDecoration(
-                        hintText: 'Ask Anything',
+                        hintText: 'Haz una pregunta',
                         hintStyle: TextStyle(
                           color: Color(0x80AFAFAF), // 50% opacity
                           fontSize: 16,
@@ -689,7 +688,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
               radius: 16,
               backgroundColor: CustomChatTheme.primaryColor,
               child: const Text(
-                'AI',
+                'Q',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 12,
@@ -727,7 +726,7 @@ class _AIChatPageState extends State<AIChatPage> with TickerProviderStateMixin {
               radius: 16,
               backgroundColor: const Color(0xFF22252A),
               child: const Text(
-                'U',
+                'Tu',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 12,
