@@ -35,7 +35,7 @@ class AIChatController {
     id: 'quantu_ai_agent',
     firstName: 'Quantu',
     lastName: 'AI',
-    imageUrl: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=150&h=150&fit=crop&crop=face', // AI avatar
+    imageUrl: 'https://i.pinimg.com/474x/7d/4a/cc/7d4accbe1801b59f281602c475fd2c15.jpg', // Rambo avatar
   );
 
   AIChatController({

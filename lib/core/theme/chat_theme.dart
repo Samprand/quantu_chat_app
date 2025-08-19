@@ -114,9 +114,9 @@ class CustomChatTheme {
       primaryColor: primaryColor,
       secondaryColor: darkBgWidgetGray,
       
-      // Input theme - using the specified color #090806
-      inputBackgroundColor: Color(0xFF090806),
-      inputBorderRadius: BorderRadius.all(Radius.circular(24)),
+      // Input theme - dark rounded input like in the image
+      inputBackgroundColor: Color(0xFF3A3A3A), // Darker gray for input
+      inputBorderRadius: BorderRadius.all(Radius.circular(30)),
       inputTextColor: darkTextDefault,
       inputTextStyle: TextStyle(
         fontSize: 16,
@@ -124,8 +124,8 @@ class CustomChatTheme {
         color: darkTextDefault,
         fontFamily: 'Inter',
       ),
-      inputPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      inputMargin: EdgeInsets.all(16),
+      inputPadding: EdgeInsets.only(left: 60, right: 60, top: 14, bottom: 14), // Space for left icon and right button
+      inputMargin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       
       // Message themes
       sentMessageBodyTextStyle: TextStyle(
@@ -152,18 +152,18 @@ class CustomChatTheme {
       // User avatar colors
       userAvatarNameColors: [primaryColor, secondaryColor, tertiaryColor],
       
-      // Send button styling
+      // Send button styling - using arrow icon
       sendButtonIcon: Icon(
-        Icons.send_rounded,
-        color: primaryColor,
-        size: 26,
+        Icons.arrow_forward,
+        color: Colors.white,
+        size: 20,
       ),
       
-      // Input decoration - no border
+      // Input decoration - custom styling to match image
       inputTextDecoration: InputDecoration(
         hintText: 'Ask Anything',
         hintStyle: TextStyle(
-          color: darkPlaceholder,
+          color: Color(0xFF8A8A8A), // Lighter gray for hint
           fontSize: 16,
           fontWeight: FontWeight.w400,
           fontFamily: 'Inter',
@@ -172,8 +172,8 @@ class CustomChatTheme {
         enabledBorder: InputBorder.none,
         focusedBorder: InputBorder.none,
         filled: true,
-        fillColor: Color(0xFF090806),
-        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        fillColor: Color(0xFF3A3A3A), // Dark gray background
+        contentPadding: EdgeInsets.only(left: 60, right: 60, top: 14, bottom: 14),
       ),
       
       // Message spacing
